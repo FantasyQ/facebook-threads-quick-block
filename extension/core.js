@@ -18,8 +18,8 @@
   function authorMatches(label, name) {
     label = normalize(label); name = normalize(name);
     const replyPrefix = `${name}回覆`;
-    const replyToComment = label.startsWith(replyPrefix) && /^.+的留言/.test(label.slice(replyPrefix.length));
-    return Boolean(name) && (label.startsWith(`${name}的留言`) || label.startsWith(`${name}的回覆`) || replyToComment || [`Comment by ${name}`, `Reply by ${name}`].some(prefix => label === prefix || label.startsWith(`${prefix} `)));
+    const replyToCommentOrReply = label.startsWith(replyPrefix) && /^.+的(?:留言|回覆)/.test(label.slice(replyPrefix.length));
+    return Boolean(name) && (label.startsWith(`${name}的留言`) || label.startsWith(`${name}的回覆`) || replyToCommentOrReply || [`Comment by ${name}`, `Reply by ${name}`].some(prefix => label === prefix || label.startsWith(`${prefix} `)));
   }
   function confirmationMatches(title, name) {
     title = normalize(title); name = normalize(name);

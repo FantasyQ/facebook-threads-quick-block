@@ -17,5 +17,22 @@ const make=(name,id,label)=>{
 const alice=make('測試 Alice','456','測試 Alice的留言1分鐘前');
 const bob=make('測試 Bob','789','測試 Bob回覆測試 Alice的留言1分鐘前');alice.append(bob);surface.append(alice);
 const mention=document.createElement('a');mention.href='https://www.facebook.com/profile.php?id=456';mention.textContent='測試 Alice';bob.append(mention);
-setTimeout(()=>{bob.append(make('測試 Carol','987','測試 Carol回覆測試 Bob的留言1分鐘前'));surface.append(make('測試 Alice','456','測試 Alice的留言2分鐘前'));},350);
-setTimeout(()=>{results.textContent=document.querySelectorAll('.fbqb-button').length===4?'PASS：回覆、動態留言與同帳號多則留言辨識正常':'FAIL';},1200);
+setTimeout(()=>{
+ let parent=bob;
+ for(let depth=3;depth<=8;depth++) {
+  const name='測試層級'+depth;
+  const child=make(name,String(900+depth),name+'回覆測試對象的回覆1分鐘前');
+  const mention=document.createElement('a');mention.href='https://www.facebook.com/profile.php?id=888';mention.textContent='測試對象';child.append(mention);
+  parent.append(child);parent=child;
+ }
+ surface.append(make('測試 Alice','456','測試 Alice的留言2分鐘前'));
+},350);
+setTimeout(()=>{
+ const articles=[...surface.querySelectorAll('[role="article"]')];
+ const correct=articles.length===9 && articles.every(article=>{
+  const buttons=[...article.querySelectorAll('.fbqb-button')].filter(b=>b.closest('[role="article"]')===article);
+  const link=article.querySelector('a');
+  return buttons.length===1 && buttons[0].previousElementSibling===link && buttons[0].dataset.profile===link.href && buttons[0].dataset.name===link.textContent;
+ });
+ results.textContent=correct?'PASS：第 1–8 層、動態展開、重複作者均正確；未誤加至內文提及':'FAIL';
+},1500);

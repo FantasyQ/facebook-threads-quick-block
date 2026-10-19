@@ -31,3 +31,15 @@ test('recognize expanded reply labels without selecting the recipient or a parti
   }
   assert.equal(C.authorMatches('測試甲回覆的留言','測試甲'),false);
 });
+
+test('replies to replies identify author, not recipient or partial name', () => {
+ for(const name of ['測試甲','Test Alice']) for(const recipient of ['測試乙',name]) {
+  const label=name+'回覆'+recipient+'的回覆3小時前';
+  assert.equal(C.authorMatches(label,name),true);
+  if(recipient!==name) assert.equal(C.authorMatches(label,recipient),false);
+  assert.equal(C.authorMatches(label,name.slice(0,-1)),false);
+  assert.equal(C.authorMatches(label,''),false);
+ }
+ assert.equal(C.authorMatches('測試甲回覆的回覆','測試甲'),false);
+ assert.equal(C.authorMatches('測試甲回覆測試乙的貼文','測試甲'),false);
+});

@@ -1,4 +1,4 @@
-# Facebook / Threads 快速封鎖 0.4.1（Chrome）
+# Facebook / Threads 快速封鎖 0.4.2（Chrome）
 
 在留言作者姓名旁點「封鎖此人」，加入佇列後依序向 Facebook 送出封鎖請求，不開新分頁、不操作個人檔案選單。這會真正封鎖帳號。
 
@@ -45,6 +45,8 @@ Facebook 內容腳本在 `https://www.facebook.com/*` 運作；Threads 使用獨
 
 ## 驗證範圍
 
+- 0.4.2：修正「甲回覆乙的回覆」辨識；測試涵蓋第 1–8 層巢狀、動態展開、重複作者與內文提及排除。
+
 - 0.4.0：23 項單元測試通過；Chrome Threads 模擬頁驗證兩人依序封鎖，以及確認帳號不符時零送出並暫停。
 
 - 0.3.0：20 項測試通過，含 30 人連續加入、序列與間隔、去重、失敗暫停不重試、取消、暫停與繼續。Chrome 本機模擬頁驗證上述操作，未大量封鎖真實帳號。
@@ -73,6 +75,6 @@ Facebook 內容腳本在 `https://www.facebook.com/*` 運作；Threads 使用獨
 
 完整資料處理說明見 [隱私政策](PRIVACY.md)，亦可由擴充功能彈出視窗開啟離線政策頁。本專案採用 [MIT 授權](LICENSE)，著作權人為 FantasyQ。
 
-執行 `npm run package`（需要 Node.js、zip、unzip）會以固定白名單建立 `dist/facebook-threads-quick-block-0.4.1.zip` 及 SHA-256 校驗檔。ZIP 根目錄包含 manifest.json、執行所需檔案、隱私政策、MIT 授權及說明；不含 Git 歷史、測試、截圖或觀察筆記。打包同時從 PRIVACY.md 產生 extension/privacy.html；修改政策後請重新打包。
+執行 `npm run package`（需要 Node.js、zip、unzip）會以固定白名單建立 `dist/facebook-threads-quick-block-0.4.2.zip` 及 SHA-256 校驗檔。ZIP 根目錄包含 manifest.json、執行所需檔案、隱私政策、MIT 授權及說明；不含 Git 歷史、測試、截圖或觀察筆記。打包同時從 PRIVACY.md 產生 extension/privacy.html；修改政策後請重新打包。
 
 目前尚未上架 Chrome Web Store。此套件可供自行解壓安裝；商店送審前仍需圖示、商店素材、可公開存取的政策網址及資料使用揭露。打包不會上傳、推送或變更儲存庫公開狀態。
