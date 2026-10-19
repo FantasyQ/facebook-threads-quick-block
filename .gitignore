@@ -1,0 +1,15 @@
+# Local verification screenshots and generated distribution archives
+/*.png
+/*.jpg
+/*.jpeg
+/*.zip
+
+node_modules/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+
+# Public release artifacts
+/dist/

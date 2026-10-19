@@ -1,0 +1,19 @@
+<!doctype html><html lang="zh-Hant"><meta charset="utf-8"><title>隱私政策｜快速封鎖</title><style>body{max-width:800px;margin:40px auto;padding:0 24px;font:16px/1.8 system-ui;color:#252b39}h1{font-size:28px}h2{font-size:21px}</style><main><h1>隱私政策</h1>
+<p>更新日期：2026-10-19</p>
+<p>本政策適用於 FantasyQ 維護的「Facebook / Threads 快速封鎖」Chrome 擴充功能。本工具為獨立開源專案，並非 Meta、Facebook 或 Threads 的官方產品。</p>
+<h2>功能與使用者操作</h2>
+<p>本工具在支援網站的作者旁加入封鎖按鈕。按下按鈕會將該帳號加入佇列並執行真正的帳號封鎖。Threads 的原生確認視窗會在核對帳號後自動確認，不會再要求第二次點擊。暫停或取消等待項目不會撤回已送出的請求。封鎖關係由網站保存；移除擴充功能不會解除封鎖，請使用網站原生設定管理。</p>
+<h2>在瀏覽器內處理的資料</h2>
+<p>本工具會讀取支援網站的頁面內容與結構，包括貼文或回覆作者的名稱、帳號網址、使用者 ID、目前登入身分、選單與封鎖結果。Facebook 自訂帳號網址可能需要額外讀取該個人檔案頁面以辨識目標 ID；取得的頁面可能包含其他內容，本工具只解析執行功能所需的資料，不建立頁面內容資料庫。</p>
+<p>Facebook 功能會從當前頁面讀取登入使用者 ID 與網站提供的請求驗證值（例如 fb_dtsg、LSD），用於向 Facebook 提交封鎖請求。本工具不要求輸入密碼，不透過 Chrome cookies API 讀取 Cookie；同源請求仍由瀏覽器正常附帶 Facebook 登入 Cookie。</p>
+<p>Threads 功能會讀取頁面上的登入帳號與目標作者，操作網站原生選單與確認視窗。本工具不另行擷取 Threads 的登入 Token；網站仍會依自己的登入機制處理封鎖。</p>
+<h2>資料傳送與接收對象</h2>
+<p>Facebook 的個人檔案查詢與封鎖請求，只送至 Facebook 的 HTTPS 同源端點。Threads 的封鎖由 Threads 網站自身處理。這些必要操作會讓對應平台收到目標帳號與執行操作的登入身分；平台後續如何處理資料，依其自己的隱私政策與設定。</p>
+<p>本工具沒有開發者後端、廣告、分析追蹤或遙測，不將上述頁面資料、帳號資料、驗證值或封鎖紀錄傳送給 FantasyQ 或其他第三方，也不出售這些資料。瀏覽器與網站本身的既有連線不屬於本工具的資料收集服務。</p>
+<h2>儲存與保留</h2>
+<p>佇列、目標帳號、處理結果及執行所需的驗證資料僅於分頁記憶體中暫存。本工具不使用本機資料庫、localStorage 或 chrome.storage 持久保存這些資料，也不主動寫入日誌。重新整理或關閉分頁會清除本工具的等待佇列與記憶體狀態；不保證清除瀏覽器自身的快取或網站已保存的封鎖結果。</p>
+<h2>網站存取範圍</h2>
+<p>內容腳本僅在 www.facebook.com、www.threads.com、threads.com、www.threads.net 及 threads.net 的 HTTPS 頁面執行，用於辨識作者並執行使用者點選的封鎖。本工具不要求所有網站存取、瀏覽紀錄或 cookies API 權限。使用者可在 Chrome 擴充功能設定限制網站存取、停用或移除此工具。</p>
+<h2>問題回報與政策變更</h2>
+<p>專案維護者為 FantasyQ。可透過專案的 GitHub Issues 回報一般問題（儲存庫開放存取後）：https://github.com/FantasyQ/facebook-threads-quick-block/issues 。公開 Issue 的內容會被其他人看見；請勿附上密碼、Token、Cookie、私人訊息、未遮蔽的網路請求或他人的個資。GitHub 依其自身政策處理你主動提交的內容；擴充功能不會自動送出問題回報。</p>
+<p>本政策將隨功能變更更新。如新增資料用途、傳送對象或網站存取範圍，會在更新說明及必要的產品提示中揭露。</p></main></html>
