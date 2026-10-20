@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Facebook / Threads 快速封鎖",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "在 Facebook 與 Threads 作者旁加入快速封鎖按鈕，依序處理佇列。",
   "minimum_chrome_version": "102",
   "content_scripts": [

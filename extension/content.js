@@ -25,9 +25,16 @@
     if(!host) {
       host=document.createElement('div');host.id='fbqb-queue';
       const shadow=host.attachShadow({mode:'open'});
-      const style=document.createElement('style');style.textContent=":host{position:fixed;left:18px;bottom:20px;z-index:2147483646;max-width:320px}section{background:#202636;color:white;padding:14px 18px;border-radius:12px;box-shadow:0 4px 24px #0004;font:14px/1.6 system-ui}p{margin:4px 0}button{margin:8px 8px 0 0;padding:4px 10px;cursor:pointer}small{color:#cbd1dd}";
+      const style=document.createElement('style');style.textContent=":host{position:fixed;left:18px;bottom:20px;z-index:2147483646;max-width:min(320px,calc(100vw - 36px))}section{background:#202636;color:white;padding:14px 18px;border-radius:12px;box-shadow:0 4px 24px #0004;font:14px/1.6 system-ui}p{margin:4px 0}button{margin:8px 8px 0 0;padding:4px 10px;cursor:pointer}small{color:#cbd1dd}header{display:flex;align-items:center;justify-content:space-between;gap:12px}#collapse{margin:0}#expand{margin:0;padding:8px 12px;border:1px solid #aeb5c5;border-radius:20px;background:#202636;color:white;box-shadow:0 2px 12px #0003;font:14px/1.6 system-ui}button:focus-visible{outline:2px solid #8cbfff;outline-offset:3px}[hidden]{display:none!important}";
       const section=document.createElement('section');section.setAttribute('aria-label','封鎖佇列');
-      const title=document.createElement('strong');title.textContent='封鎖佇列';section.append(title);
+      section.id='panel';
+      const header=document.createElement('header');
+      const title=document.createElement('strong');title.textContent='封鎖佇列';
+      const collapse=document.createElement('button');collapse.type='button';collapse.id='collapse';collapse.textContent='收合';collapse.setAttribute('aria-label','收合封鎖佇列');
+      header.append(title,collapse);section.append(header);
+      const expand=document.createElement('button');expand.type='button';expand.id='expand';expand.hidden=true;expand.setAttribute('aria-controls','panel');expand.setAttribute('aria-expanded','false');
+      collapse.onclick=()=>{section.hidden=true;expand.hidden=false;expand.focus();};
+      expand.onclick=()=>{section.hidden=false;expand.hidden=true;collapse.focus();};
       for(const id of ['counts','current','reason','toggle','cancel']) {
         const el=document.createElement(['toggle','cancel'].includes(id)?'button':'p');el.id=id;
         if(id==='counts')el.setAttribute('role','status');
@@ -35,7 +42,7 @@
         section.append(el);
       }
       const hint=document.createElement('p'),small=document.createElement('small');small.textContent='每次處理一人，間隔 2 秒。關閉或重新整理分頁會清除等待項目。';hint.append(small);section.append(hint);
-      shadow.append(style,section);
+      shadow.append(style,section,expand);
       shadow.getElementById('toggle').onclick=()=>queue.snapshot().paused?queue.resume():queue.pause();
       shadow.getElementById('cancel').onclick=()=>queue.cancelWaiting();
       document.body.append(host);
@@ -46,6 +53,10 @@
     root.getElementById('reason').textContent=status.reason;
     root.getElementById('toggle').textContent=status.paused?'繼續等待項目':'暫停';
     root.getElementById('cancel').disabled=!status.waiting;
+    const summary=status.paused?'已暫停':status.active||status.waiting?`剩 ${status.waiting+(status.active?1:0)} 人`:'已完成';
+    const expand=root.getElementById('expand');
+    expand.textContent=`封鎖佇列 · ${summary}`;
+    expand.setAttribute('aria-label',`展開封鎖佇列，${summary}${status.reason?`，${status.reason}`:''}`);
   }
   chrome.runtime.onMessage.addListener((message,sender,respond)=>{
     if (message.type === 'fbqb-check-profile') {
