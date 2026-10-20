@@ -1,0 +1,78 @@
+name: Publish extension release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Validate version tag
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          node - <<'JS'
+          const fs = require('node:fs');
+          const version = require('./extension/manifest.json').version;
+          if (!/^\d+\.\d+\.\d+$/.test(version) || process.env.RELEASE_TAG !== `v${version}`) {
+            throw new Error('Release tag must match manifest version, e.g. v0.4.4');
+          }
+          fs.appendFileSync(process.env.GITHUB_ENV, `VERSION=${version}\n`);
+          JS
+      - name: Test
+        run: npm test
+      - name: Package and verify
+        run: |
+          npm run package
+          git diff --exit-code
+          cd dist
+          sha256sum -c "facebook-threads-quick-block-${VERSION}.zip.sha256"
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          cat > "$RUNNER_TEMP/release-notes.md" <<EOF
+          ## 下載與安裝／更新
+
+          1. 下載下方 Assets 的 **facebook-threads-quick-block-${VERSION}.zip**（不是 Source code），解壓縮到固定資料夾。
+          2. Chrome 開啟 \`chrome://extensions\`，啟用「開發人員模式」。
+          3. 首次安裝：點「載入未封裝項目」，選擇直接包含 \`manifest.json\` 的資料夾。
+          4. 更新：以新版檔案替換原安裝資料夾內容，再按擴充功能的「重新載入」。
+          5. 重新整理 Facebook／Threads 頁面。安裝後請保留資料夾。
+
+          本工具尚未上架 Chrome Web Store，需手動安裝與更新，不適用於 iOS App。
+          按下「封鎖此人」會真正封鎖帳號；移除擴充功能不會解除已封鎖帳號。
+
+          安裝包已通過自動測試與打包檢查，另附 SHA-256 校驗檔。
+          [隱私政策](https://github.com/${GH_REPO}/blob/${RELEASE_TAG}/PRIVACY.md) · MIT 授權 · 非 Meta 官方產品
+          EOF
+          # Only a draft created for this tag may be resumed after an interrupted upload.
+          if gh release view "$RELEASE_TAG" --json isDraft > "$RUNNER_TEMP/release-state.json" 2>/dev/null; then
+            node -e 'if (!require(process.argv[1]).isDraft) throw Error("Release already published; refusing to overwrite")' "$RUNNER_TEMP/release-state.json"
+          else
+            gh release create "$RELEASE_TAG" --verify-tag --draft \
+              --title "${RELEASE_TAG} — Facebook / Threads 快速封鎖" \
+              --notes-file "$RUNNER_TEMP/release-notes.md" --generate-notes
+          fi
+          gh release upload "$RELEASE_TAG" \
+            "dist/facebook-threads-quick-block-${VERSION}.zip" \
+            "dist/facebook-threads-quick-block-${VERSION}.zip.sha256" --clobber
+          gh release edit "$RELEASE_TAG" --draft=false

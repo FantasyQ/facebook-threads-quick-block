@@ -79,3 +79,11 @@ Facebook 內容腳本在 `https://www.facebook.com/*` 運作；Threads 使用獨
 執行 `npm run package`（需要 Node.js、zip、unzip）會以固定白名單建立 `dist/facebook-threads-quick-block-0.4.3.zip` 及 SHA-256 校驗檔。ZIP 根目錄包含 manifest.json、執行所需檔案、隱私政策、MIT 授權及說明；不含 Git 歷史、測試、截圖或觀察筆記。打包同時從 PRIVACY.md 產生 extension/privacy.html；修改政策後請重新打包。
 
 目前尚未上架 Chrome Web Store。此套件可供自行解壓安裝；商店送審前仍需圖示、商店素材、可公開存取的政策網址及資料使用揭露。打包不會上傳、推送或變更儲存庫公開狀態。
+
+## 自動發布
+
+推送 `v主版號.次版號.修訂號` 標籤（例如 `v0.4.4`）會啟動 GitHub Actions：檢查標籤與 manifest 版本一致 → 執行測試 → 打包並驗證校驗碼 → 上傳 ZIP 與 SHA-256 檔 → 公開 Release。一般推送 main 不會發布。
+
+發布前更新 `extension/manifest.json` 的版本及 README，執行測試與打包，提交後為該提交建立版本標籤，再一起推送 main 與標籤。對話中可直接要求「發布 v0.4.4」，一次授權 push 與 Release；無須分開要求。
+
+工作流程使用 GitHub 內建 Token，不需要另設個人 Token。測試或打包失敗時不發布；附件上傳失敗時保留草稿，可在 Actions 重新執行。已公開的同名 Release 不會被覆蓋。工作流程依據 [GitHub 標籤事件](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow)與 [GitHub CLI Release](https://cli.github.com/manual/gh_release_create)建立。
