@@ -58,7 +58,7 @@ jobs:
           4. 更新：以新版檔案替換原安裝資料夾內容，再按擴充功能的「重新載入」。
           5. 重新整理 Facebook／Threads 頁面。安裝後請保留資料夾。
 
-          本工具尚未上架 Chrome Web Store，需手動安裝與更新，不適用於 iOS App。
+          此 GitHub 安裝包需手動安裝與更新，不適用於 iOS App。商店版本採不公開（Unlisted）發行，通過審查並發布後，持有商店連結者可安裝。
           按下「封鎖此人」會真正封鎖帳號；移除擴充功能不會解除已封鎖帳號。
 
           安裝包已通過自動測試與打包檢查，另附 SHA-256 校驗檔。
@@ -76,3 +76,37 @@ jobs:
             "dist/facebook-threads-quick-block-${VERSION}.zip" \
             "dist/facebook-threads-quick-block-${VERSION}.zip.sha256" --clobber
           gh release edit "$RELEASE_TAG" --draft=false
+  chrome-web-store:
+    needs: release
+    if: vars.CWS_UNLISTED_READY == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    concurrency:
+      group: chrome-web-store-publish
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+      - name: Download released package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          mkdir -p dist
+          gh release download "$RELEASE_TAG" --dir dist --pattern 'facebook-threads-quick-block-*.zip' --pattern '*.zip.sha256'
+      - name: Upload and submit to Chrome Web Store
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+          CWS_UNLISTED_READY: ${{ vars.CWS_UNLISTED_READY }}
+          CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID || '09396b88-be7b-4af3-8d74-849c328baad0' }}
+          CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+        run: node scripts/store-publish.cjs
