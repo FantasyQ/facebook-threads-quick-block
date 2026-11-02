@@ -20,12 +20,65 @@
       renderQueue(status);
     }
   });
+  function installQueueDrag(host, handles) {
+    let position = null, drag = null, suppressClick = false;
+    function place(x, y) {
+      const rect = host.getBoundingClientRect();
+      position = {
+        x: Math.max(0, Math.min(x, window.innerWidth - rect.width)),
+        y: Math.max(0, Math.min(y, window.innerHeight - rect.height))
+      };
+      Object.assign(host.style, {left:`${position.x}px`,top:`${position.y}px`,bottom:'auto',right:'auto'});
+    }
+    for (const handle of handles) {
+      handle.style.touchAction = 'none';
+      handle.style.cursor = 'grab';
+      handle.style.userSelect = 'none';
+      handle.title = '拖曳移動位置';
+      handle.addEventListener('pointerdown', event => {
+        if (!event.isPrimary || event.button !== 0 || (event.target.closest('button') && event.target !== handle)) return;
+        suppressClick = false;
+        const rect = host.getBoundingClientRect();
+        drag = {id:event.pointerId,x:event.clientX,y:event.clientY,left:rect.left,top:rect.top,moved:false};
+        handle.setPointerCapture(event.pointerId);
+      });
+      handle.addEventListener('pointermove', event => {
+        if (!drag || drag.id !== event.pointerId) return;
+        const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
+        if (!drag.moved && Math.hypot(dx,dy) < 5) return;
+        drag.moved = true;
+        suppressClick = true;
+        handle.style.cursor = 'grabbing';
+        place(drag.left + dx, drag.top + dy);
+        event.preventDefault();
+      });
+      const finish = event => {
+        if (!drag || drag.id !== event.pointerId) return;
+        drag = null;
+        handle.style.cursor = 'grab';
+        if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId);
+      };
+      handle.addEventListener('pointerup', finish);
+      handle.addEventListener('pointercancel', finish);
+      handle.addEventListener('lostpointercapture', finish);
+      handle.addEventListener('click', event => {
+        if (!suppressClick || event.detail === 0) return;
+        suppressClick = false;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+      }, true);
+    }
+    // Keep the panel reachable when expanded, its status changes, or the viewport shrinks.
+    const fit = () => { if (position) place(position.x,position.y); };
+    new ResizeObserver(fit).observe(host);
+    window.addEventListener('resize', fit);
+  }
   function renderQueue(status) {
     let host=document.getElementById('fbqb-queue');
     if(!host) {
       host=document.createElement('div');host.id='fbqb-queue';
       const shadow=host.attachShadow({mode:'open'});
-      const style=document.createElement('style');style.textContent=":host{position:fixed;left:18px;bottom:20px;z-index:2147483646;max-width:min(320px,calc(100vw - 36px))}section{background:#202636;color:white;padding:14px 18px;border-radius:12px;box-shadow:0 4px 24px #0004;font:14px/1.6 system-ui}p{margin:4px 0}button{margin:8px 8px 0 0;padding:4px 10px;cursor:pointer}small{color:#cbd1dd}header{display:flex;align-items:center;justify-content:space-between;gap:12px}#collapse{margin:0}#expand{margin:0;padding:8px 12px;border:1px solid #aeb5c5;border-radius:20px;background:#202636;color:white;box-shadow:0 2px 12px #0003;font:14px/1.6 system-ui}button:focus-visible{outline:2px solid #8cbfff;outline-offset:3px}[hidden]{display:none!important}";
+      const style=document.createElement('style');style.textContent=":host{position:fixed;left:18px;bottom:20px;z-index:2147483646;max-width:min(320px,calc(100vw - 36px))}section{max-height:calc(100vh - 28px);overflow:auto;background:#202636;color:white;padding:14px 18px;border-radius:12px;box-shadow:0 4px 24px #0004;font:14px/1.6 system-ui}p{margin:4px 0}button{margin:8px 8px 0 0;padding:4px 10px;cursor:pointer}small{color:#cbd1dd}header{display:flex;align-items:center;justify-content:space-between;gap:12px}#collapse{margin:0}#expand{margin:0;padding:8px 12px;border:1px solid #aeb5c5;border-radius:20px;background:#202636;color:white;box-shadow:0 2px 12px #0003;font:14px/1.6 system-ui}button:focus-visible{outline:2px solid #8cbfff;outline-offset:3px}[hidden]{display:none!important}";
       const section=document.createElement('section');section.setAttribute('aria-label','封鎖佇列');
       section.id='panel';
       const header=document.createElement('header');
@@ -46,6 +99,7 @@
       shadow.getElementById('toggle').onclick=()=>queue.snapshot().paused?queue.resume():queue.pause();
       shadow.getElementById('cancel').onclick=()=>queue.cancelWaiting();
       document.body.append(host);
+      installQueueDrag(host,[header,expand]);
     }
     const root=host.shadowRoot;
     root.getElementById('counts').textContent=`等待 ${status.waiting} 人 · 完成 ${status.completed} 人 · 失敗 ${status.failed} 次`;
