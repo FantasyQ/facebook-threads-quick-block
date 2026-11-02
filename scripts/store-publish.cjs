@@ -13,7 +13,18 @@ async function publish({ env = process.env, request = fetch, sleep = ms => new P
     let response;
     try { response = await request(url, { ...options, redirect: 'error', signal: AbortSignal.timeout(60000) }); }
     catch { throw Error('Store request failed or timed out; inspect dashboard before retrying'); }
-    if (!response.ok) throw Error(`Store request failed (HTTP ${response.status}); inspect dashboard before retrying`);
+    if (!response.ok) {
+      const stage = url === 'https://oauth2.googleapis.com/token' ? 'OAuth token request' : 'Store request';
+      let detail = '';
+      // Only log known error identifiers, never Google's raw response or request values.
+      if (stage === 'OAuth token request') {
+        try {
+          const body = await response.json();
+          if (['invalid_client', 'invalid_grant', 'unauthorized_client', 'invalid_request'].includes(body.error)) detail = `: ${body.error}`;
+        } catch {}
+      }
+      throw Error(`${stage} failed (HTTP ${response.status}${detail}); inspect credentials or dashboard before retrying`);
+    }
     try { return await response.json(); } catch { throw Error('Invalid store response'); }
   }
   const auth = await json('https://oauth2.googleapis.com/token', {
