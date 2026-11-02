@@ -63,3 +63,21 @@ test('resolve only reads and does not block; missing IDs never send a mutation',
  const b=A.createClient({doc,canonical:C.profileURL,parseHTML:()=>profileDoc([]),fetcher:async(url,opts)=>{methods.push(opts.method||'GET');return {ok:true,text:async()=>''}}});
  await assert.rejects(b.block('https://www.facebook.com/alice'),/ID/);assert.deepEqual(methods,['GET','GET']);
 });
+
+test('revalidate login after profile lookup before sending any mutation',async()=>{
+ for(const change of ['switch','logout','page','refresh']) {
+  let actor='123',account='123',token='old-mock',posts=0,sentToken;
+  const changingDoc={querySelectorAll:()=>[{textContent:JSON.stringify({require:[['CurrentUserInitialData',[],{USER_ID:actor,ACCOUNT_ID:account}],['DTSGInitialData',[],{token}]]})}]};
+  const a=A.createClient({doc:changingDoc,canonical:C.profileURL,parseHTML:()=>profileDoc([{__typename:'User',id:'456',url:'https://www.facebook.com/alice'}]),fetcher:async(url,opts)=>{
+   if(!opts.method){
+    if(change==='switch')actor=account='789';
+    if(change==='logout')actor=account='0';
+    if(change==='page')account='789';
+    token='new-mock';return {ok:true,text:async()=>''};
+   }
+   posts++;sentToken=opts.body.get('fb_dtsg');return response(success);
+  }});
+  if(change==='refresh'){await a.block('https://www.facebook.com/alice');assert.equal(posts,1);assert.equal(sentToken,'new-mock');}
+  else {await assert.rejects(a.block('https://www.facebook.com/alice'),/登入|個人帳號/);assert.equal(posts,0,change);}
+ }
+});

@@ -91,8 +91,11 @@
       return id;
     }
     async function block(raw) {
-      const auth = credentials(doc);
+      const initialActor = credentials(doc).actor;
       const id = await resolve(raw);
+      // Profile lookup may await the network; validate again before any mutation.
+      const auth = credentials(doc);
+      if (auth.actor !== initialActor) throw Error('登入身分已改變，已停止封鎖；請重新整理後再試。');
       if (id === auth.actor) throw Error('不能封鎖目前登入的帳號。');
       const key = `${auth.actor}:${id}`;
       if (completed.has(key)) return {ok:true};
